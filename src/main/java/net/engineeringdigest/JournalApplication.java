@@ -11,3 +11,5 @@ public class JournalApplication {
         SpringApplication.run(JournalApplication.class, args);
     }
 }
+
+

@@ -45,11 +45,10 @@ public class JournalEntryControllerV2 {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         }
-
     }
 
     @GetMapping("id/{myId}")
-    public ResponseEntity getJournalEntryById(@PathVariable ObjectId myId) {
+    public ResponseEntity<?> getJournalEntryById(@PathVariable ObjectId myId) {
 //        return journalEntries.get(myId);
         Optional<JournalEntry> journalEntry = journalEntryService.findById(myId);
         if (journalEntry.isPresent()) {
