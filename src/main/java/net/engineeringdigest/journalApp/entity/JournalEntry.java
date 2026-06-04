@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 // 3. Created "journal_entries" will be mapped with the class JournalEntry
 
 @Data
+@NoArgsConstructor
 public class JournalEntry {
 
     @Id // As due to mapping for Primary Key

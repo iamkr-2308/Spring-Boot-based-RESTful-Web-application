@@ -1,14 +1,14 @@
 package net.engineeringdigest.journalApp.controller;
 import net.engineeringdigest.journalApp.entity.JournalEntry;
+import net.engineeringdigest.journalApp.entity.User;
 import net.engineeringdigest.journalApp.services.JournalEntryService;
+import net.engineeringdigest.journalApp.services.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +21,14 @@ public class JournalEntryControllerV2 {
 
 //    private Map<Long, JournalEntry> journalEntries = new HashMap<>();
 
-    @GetMapping  // localhost:8080/journal GET
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("{userName}")  // localhost:8080/journal GET
     // Methods inside a class should be made public so that they can be accessed and invoked by the Spring Framework or External Files.
-    public ResponseEntity<?> getAll() {
-        List<JournalEntry> all = journalEntryService.getAll();
+    public ResponseEntity<?> getAllJournalEntriesOfUser(@PathVariable String userName) {
+        User user = userService.findByUserName(userName);
+        List<JournalEntry> all = user.getJournalEntries();
         if (all != null && !all.isEmpty()) {
             return new ResponseEntity<>(all, HttpStatus.OK);
         }
@@ -32,20 +36,18 @@ public class JournalEntryControllerV2 {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PostMapping // localhost:8080/journal POST
-    public ResponseEntity<JournalEntry> createEntry(@RequestBody JournalEntry myEntry) {// It will become instance of JournalEntry
+    @PostMapping("{userName}") // localhost:8080/journal POST
+    public ResponseEntity<JournalEntry> createEntry(@RequestBody JournalEntry myEntry, @PathVariable String userName) {// It will become instance of JournalEntry
         // Its Like saying, "Hey Spring, please data from the request and turn it into a JAVA OBJECT that i can use in my code"
         try {
-            myEntry.setDate(LocalDateTime.now());
-            journalEntryService.saveEntry(myEntry);
+            journalEntryService.saveEntry(myEntry, userName);
 //        journalEntryService.saveEntry(myEntry);
 //        journalEntries.put(myEntry.getId(), myEntry);
             return new ResponseEntity<>(myEntry, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
         }
-    }
+     }
 
     @GetMapping("id/{myId}")
     public ResponseEntity<?> getJournalEntryById(@PathVariable ObjectId myId) {
@@ -57,17 +59,22 @@ public class JournalEntryControllerV2 {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @DeleteMapping("id/{myId}")
-    public ResponseEntity<?> deleteJournalEntryById(@PathVariable ObjectId myId) {
+    @DeleteMapping("id/{userName}/{myId}")
+    public ResponseEntity<?> deleteJournalEntryById(@PathVariable ObjectId myId, @PathVariable String userName) {
 //        return journalEntries.remove(myId);
-        journalEntryService.deleteById(myId);
+        journalEntryService.deleteById(myId, userName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping("id/{id}")
-    public ResponseEntity<?> updateJournalEntryById(@PathVariable ObjectId id, @RequestBody JournalEntry newEntry) {
-        JournalEntry old = journalEntryService.findById(id).orElse(null);
-        if (old != null) {
+    @PutMapping("id/{userName}/{myId}")
+    public ResponseEntity<?> updateJournalEntryById
+            (@PathVariable ObjectId myId,
+             @RequestBody JournalEntry newEntry,
+             @PathVariable String userName)
+    {
+        JournalEntry old = journalEntryService.findById(myId).orElse(null);
+        if (old != null)
+        {
             old.setTitle(newEntry.getTitle() != null && !newEntry.getTitle().equals("") ? newEntry.getTitle() : old.getTitle());
             old.setContent(newEntry.getContent() != null && !newEntry.equals("") ? newEntry.getContent() : old.getContent());
             journalEntryService.saveEntry(old);
